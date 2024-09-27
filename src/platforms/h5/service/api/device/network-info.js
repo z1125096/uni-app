@@ -28,12 +28,31 @@ export function onNetworkStatusChange (callbackId) {
   }
 }
 
+export function offNetworkStatusChange (callbackId) {
+  // 暂不支持移除所有监听
+  if (callbackId) {
+    const index = callbackIds.indexOf(callbackId)
+    if (index >= 0) {
+      callbackIds.splice(index, 1)
+    }
+  }
+  if (!callbackIds.length) {
+    const connection = navigator.connection || navigator.webkitConnection
+    if (connection) {
+      connection.removeEventListener('change', changeHandler)
+    } else {
+      window.removeEventListener('offline', changeHandler)
+      window.removeEventListener('online', changeHandler)
+    }
+  }
+}
+
 export function getNetworkType () {
   const connection = navigator.connection || navigator.webkitConnection
   let networkType = 'unknown'
   if (connection) {
     networkType = connection.type
-    if (networkType === 'cellular') {
+    if (networkType === 'cellular' && connection.effectiveType) {
       networkType = connection.effectiveType.replace('slow-', '')
     } else if (!['none', 'wifi'].includes(networkType)) {
       networkType = 'unknown'
